@@ -9,8 +9,9 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 startbutton = 'Начать'
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
-startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"!'
+startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
 startmessage3 = 'И последний шаг: назови своё направление и курс, например: "Программная Инженерия, 1 курс"'
+startmessage4 = 'Регистрация завершена!'
 mainbutton0 = 'Найти команду'
 mainbutton1 = 'Организовать свою команду'
 mainbutton2 = 'Доступные мероприятия'
@@ -37,21 +38,37 @@ keyboard = {
         [get_button(label=mainbutton3, color='primary')]
     ]
 }
+keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+keyboard = str(keyboard.decode('utf-8'))
+
+userstatus = 'unchecked' # unchecked/checked - столбец status в БД, которая показывает, прошёл ли пользователь регистрацию, или нет
 
 while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
         id = messages['items'][0]['last_message']['from_id']
         body = messages['items'][0]['last_message']['text']
-        if body.lower() == mainbutton0.lower():
-            vk.method('messages.send', {'peer_id':id, 'message':'*список команд с мероприятиями и капитанами*', 'random_id':''})            
-        elif body.lower() == mainbutton1.lower():
-            vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
-        elif body.lower() == mainbutton2.lower():
-            vk.method('messages.send', {'peer_id':id, 'message':'*список мероприятий с датами*', 'random_id':''})              
-        elif body.lower() == mainbutton3.lower():
-            vk.method('messages.send', {'peer_id':id, 'message':'*снова заполнение данных со старта*', 'random_id':''})
-        else:
-            vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})        
+
+        if userstatus == 'unchecked':
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
+            
+        if userstatus == 'checked':
+            if body.lower() == 'клавиатура':
+                vk.method('messages.send', {'peer_id':id, 'message':'Выбери вариант, который тебя интересует', 'random_id':''})                
+            elif body.lower() == mainbutton0.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'*список команд с мероприятиями и капитанами*', 'random_id':''})            
+            elif body.lower() == mainbutton1.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
+            elif body.lower() == mainbutton2.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'*список мероприятий с датами*', 'random_id':''})              
+            elif body.lower() == mainbutton3.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'*снова заполнение данных со старта*', 'random_id':''})
+            else:
+                 vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})
+
     time.sleep(1)
  
