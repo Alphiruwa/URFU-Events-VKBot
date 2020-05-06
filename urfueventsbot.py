@@ -7,7 +7,6 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f31221f4f58eef5ec0c6b6838a01e93', api_version=5.95)
 
-startbutton = 'Начать'
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
 startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
@@ -55,7 +54,7 @@ while True:
         speciality = 'Программная Инженерия, 1'
         
         if userstatus == 'unchecked':
-            if (fio == ''):
+            if fio == '':
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
             if group =='' and fio != '':
