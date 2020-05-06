@@ -1,4 +1,5 @@
 import vk_api
+import pymysql
 import time
 import json
 
@@ -41,25 +42,31 @@ keyboard = {
 keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
 keyboard = str(keyboard.decode('utf-8'))
 
-userstatus = 'unchecked' # unchecked/checked - столбец status в БД, которая показывает, прошёл ли пользователь регистрацию, или нет
-
 while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
         id = messages['items'][0]['last_message']['from_id']
         body = messages['items'][0]['last_message']['text']
 
+        #временный шаблон данных, которые будут браться с БД
+        userstatus = 'unchecked' # unchecked/checked - столбец status в БД, которая показывает, прошёл ли пользователь регистрацию, или нет
+        fio = 'Анохин Богдан Сергеевич'
+        group = 'РИ-190012'
+        speciality = 'Программная Инженерия, 1'
+        
         if userstatus == 'unchecked':
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
+            if (fio == ''):
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
+            if group =='' and fio != '':
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})
+            if speciality == '' and fio != '' and group != '':
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
+            if fio != '' and group != '' and speciality != '':
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
             
-        if userstatus == 'checked':
-            if body.lower() == 'клавиатура':
-                vk.method('messages.send', {'peer_id':id, 'message':'Выбери вариант, который тебя интересует', 'random_id':''})                
-            elif body.lower() == mainbutton0.lower():
+        if userstatus == 'checked':               
+            if body.lower() == mainbutton0.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*список команд с мероприятиями и капитанами*', 'random_id':''})            
             elif body.lower() == mainbutton1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
