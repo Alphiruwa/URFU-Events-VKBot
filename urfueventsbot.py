@@ -7,6 +7,8 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f31221f4f58eef5ec0c6b6838a01e93', api_version=5.95)
 
+db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
+
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
 startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
