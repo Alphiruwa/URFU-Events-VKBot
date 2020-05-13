@@ -9,6 +9,22 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 
 db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 
+def get_teams(db):
+    cur = db.cursor()
+    teams = cur.execute("SELECT * FROM urfuevents_teams")
+    teamlist = ''
+    for team in teams:
+        teamlist += team+'\n'
+    return teamlist
+
+def get_events(db):
+    cur = db.cursor()
+    events = cur.execute("SELECT * FROM urfuevents_events")
+    eventlist = ''
+    for event in events:
+        eventlist += event+'\n'
+    return eventlist
+
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
 startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
@@ -68,11 +84,11 @@ while True:
             
         if userstatus == 'checked':               
             if body.lower() == mainbutton0.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':'*список команд с мероприятиями и капитанами*', 'random_id':''})            
+                vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'random_id':''})            
             elif body.lower() == mainbutton1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
             elif body.lower() == mainbutton2.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':'*список мероприятий с датами*', 'random_id':''})              
+                vk.method('messages.send', {'peer_id':id, 'message':get_events(db), 'random_id':''})              
             elif body.lower() == mainbutton3.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*снова заполнение данных со старта*', 'random_id':''})
             else:
