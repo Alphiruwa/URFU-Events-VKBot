@@ -12,7 +12,7 @@ db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevent
 def get_teams(db):
     cur = db.cursor()
     teams = cur.execute("SELECT * FROM urfuevents_teams")
-    teamlist = ''
+    teamlist = 'Чтобы присоединиться к команде, отправь её номер в ответ!\n'
     for team in teams:
         teamlist += team+'\n'
     return teamlist
@@ -20,7 +20,7 @@ def get_teams(db):
 def get_events(db):
     cur = db.cursor()
     events = cur.execute("SELECT * FROM urfuevents_events")
-    eventlist = ''
+    eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n'
     for event in events:
         eventlist += event+'\n'
     return eventlist
