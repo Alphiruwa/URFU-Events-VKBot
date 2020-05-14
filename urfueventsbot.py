@@ -19,7 +19,7 @@ def get_user_info(db, userid):
     userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id=',userid,')
     usergroup = cur.execute('SELECT group FROM urfuevents_users WHERE id=',userid,')
     userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id=',userid,')
-    userinfo = userfio + usergroup + userspicailty
+    userinfo = [userfio, usergroup, userspeciaity]
     return userinfo
 
 def get_user_team(db, userid):
@@ -42,6 +42,9 @@ def get_events(db):
     for event in events:
         eventlist += event+'\n'
     return eventlist
+
+def reset_info(db, id):
+    cur = db.cursor()
 
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
@@ -83,24 +86,22 @@ while True:
         id = messages['items'][0]['last_message']['from_id']
         body = messages['items'][0]['last_message']['text']
 
-        #временный шаблон данных, которые будут браться с БД
-        userstatus = 'unchecked' # unchecked/checked - столбец status в БД, которая показывает, прошёл ли пользователь регистрацию, или нет
-        fio = 'Анохин Богдан Сергеевич'
-        group = 'РИ-190012'
-        speciality = 'Программная Инженерия, 1'
+        user_info = get_user_info(db, id)
+        user_status = get_user_status(db, id)
+        user_team = get_user_team(db, id)
         
-        if userstatus == 'unchecked':
-            if fio == '':
+        if user_status == '':
+            if user_info[0] == '':
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
-            if group =='' and fio != '':
+            if user_info[1] == '' and user_info[0] != '':
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})
-            if speciality == '' and fio != '' and group != '':
+            if user_info[2] == '' and user_info[1] != '' and user_info[0] != '':
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
-            if fio != '' and group != '' and speciality != '':
+            if user_info[0] != '' and user_info[1] != '' and user_info[2] != '':
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
             
-        if userstatus == 'checked':               
+        if user_status != '':               
             if body.lower() == mainbutton0.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'random_id':''})            
             elif body.lower() == mainbutton1.lower():
