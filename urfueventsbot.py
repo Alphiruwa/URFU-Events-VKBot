@@ -9,9 +9,27 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 
 db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 
+def get_user_status(db,userid)
+    cur = db.cursor()
+    userinfo = cur.execute('SELECT status FROM urfuevents_users WHERE id=',userid,')
+    return userstatus
+
+def get_user_info(db, userid):
+    cur = db.cursor()
+    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id=',userid,')
+    usergroup = cur.execute('SELECT group FROM urfuevents_users WHERE id=',userid,')
+    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id=',userid,')
+    userinfo = userfio + usergroup + userspicailty
+    return userinfo
+
+def get_user_team(db, userid):
+    cur = db.cursor()
+    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id=',userid,')
+    return userteam
+
 def get_teams(db):
     cur = db.cursor()
-    teams = cur.execute("SELECT * FROM urfuevents_teams")
+    teams = cur.execute('SELECT * FROM urfuevents_teams')
     teamlist = 'Чтобы присоединиться к команде, отправь её номер в ответ!\n'
     for team in teams:
         teamlist += team+'\n'
@@ -19,7 +37,7 @@ def get_teams(db):
 
 def get_events(db):
     cur = db.cursor()
-    events = cur.execute("SELECT * FROM urfuevents_events")
+    events = cur.execute('SELECT * FROM urfuevents_events')
     eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n'
     for event in events:
         eventlist += event+'\n'
@@ -95,4 +113,3 @@ while True:
                  vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})
 
     time.sleep(1)
- 
