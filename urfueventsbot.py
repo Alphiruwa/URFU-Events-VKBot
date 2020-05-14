@@ -9,7 +9,7 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 
 db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 
-def get_user_status(db,userid)
+def get_user_status(db,userid):
     cur = db.cursor()
     userinfo = cur.execute('SELECT status FROM urfuevents_users WHERE id=',userid,')
     return userstatus
