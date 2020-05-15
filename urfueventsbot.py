@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import vk_api
 import pymysql
 import time
@@ -11,20 +14,20 @@ db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents'
 
 def get_user_status(db,userid):
     cur = db.cursor()
-    userinfo = cur.execute('SELECT status FROM urfuevents_users WHERE id=',userid)
+    userstatus = cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
     return userstatus
 
 def get_user_info(db, userid):
     cur = db.cursor()
-    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id=',userid)
-    usergroup = cur.execute('SELECT group FROM urfuevents_users WHERE id=',userid)
-    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id=',userid)
-    userinfo = [userfio, usergroup, userspeciaity]
+    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id='+str(userid))
+    usergroup = cur.execute('SELECT studygroup FROM urfuevents_users WHERE id='+str(userid))
+    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id='+str(userid))
+    userinfo = [userfio, usergroup, userspeciality]
     return userinfo
 
 def get_user_team(db, userid):
     cur = db.cursor()
-    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id=',userid)
+    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id='+str(userid))
     return userteam
 
 def get_teams(db):
