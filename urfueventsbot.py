@@ -7,24 +7,24 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f31221f4f58eef5ec0c6b6838a01e93', api_version=5.95)
 
-db = pymysql.connect('81.91.176.8', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
+db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 
 def get_user_status(db,userid):
     cur = db.cursor()
-    userinfo = cur.execute('SELECT status FROM urfuevents_users WHERE id=',userid,')
+    userinfo = cur.execute('SELECT status FROM urfuevents_users WHERE id=',userid)
     return userstatus
 
 def get_user_info(db, userid):
     cur = db.cursor()
-    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id=',userid,')
-    usergroup = cur.execute('SELECT group FROM urfuevents_users WHERE id=',userid,')
-    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id=',userid,')
+    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id=',userid)
+    usergroup = cur.execute('SELECT group FROM urfuevents_users WHERE id=',userid)
+    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id=',userid)
     userinfo = [userfio, usergroup, userspeciaity]
     return userinfo
 
 def get_user_team(db, userid):
     cur = db.cursor()
-    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id=',userid,')
+    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id=',userid)
     return userteam
 
 def get_teams(db):
