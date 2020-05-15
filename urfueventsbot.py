@@ -14,36 +14,45 @@ db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents'
 
 def get_user_status(db,userid):
     cur = db.cursor()
-    userstatus = cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
+    cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
+    userstatus = cur.fetchall()
     return userstatus
 
-def get_user_info(db, userid):
+def get_user_info(db, userid):  
     cur = db.cursor()
-    userfio = cur.execute('SELECT fio FROM urfuevents_users WHERE id='+str(userid))
-    usergroup = cur.execute('SELECT studygroup FROM urfuevents_users WHERE id='+str(userid))
-    userspeciality = cur.execute('SELECT speciality FROM urfuevents_users WHERE id='+str(userid))
+    cur.execute('SELECT fio FROM urfuevents_users WHERE id='+str(userid))
+    userfio = cur.fetchall()
+    cur.execute('SELECT studygroup FROM urfuevents_users WHERE id='+str(userid))
+    usergroup = cur.fetchall()
+    cur.execute('SELECT speciality FROM urfuevents_users WHERE id='+str(userid))
+    userspeciality = cur.fetchall()
     userinfo = [userfio, usergroup, userspeciality]
     return userinfo
 
 def get_user_team(db, userid):
     cur = db.cursor()
-    userteam = cur.execute('SELECT team FROM urfuevents_users WHERE id='+str(userid))
+    cur.execute('SELECT team FROM urfuevents_users WHERE id='+str(userid))
+    userteam = cur.fetchall()
     return userteam
 
 def get_teams(db):
     cur = db.cursor()
-    teams = cur.execute('SELECT * FROM urfuevents_teams')
+    cur.execute('SELECT * FROM urfuevents_teams WHERE 1')
+    teams = cur.fetchall()
     teamlist = 'Чтобы присоединиться к команде, отправь её номер в ответ!\n'
     for team in teams:
-        teamlist += team+'\n'
+        teamlist += team
+        teamlist += '\n'
     return teamlist
 
 def get_events(db):
     cur = db.cursor()
-    events = cur.execute('SELECT * FROM urfuevents_events')
+    cur.execute('SELECT * FROM urfuevents_events WHERE 1')
+    events = cur.fetchall()
     eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n'
     for event in events:
-        eventlist += event+'\n'
+        eventlist += event
+        eventlist += '\n'
     return eventlist
 
 def reset_info(db, id):
