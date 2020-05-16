@@ -13,6 +13,13 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 db.autocommit(True)
 
+def id_is_not_exist(db, userid):
+    cur = db.cursor()
+    cur.execute('SELECT * FROM urfuevents_users WHERE id='+str(userid))
+    check = cur.fetchall()
+    if check == (): return True
+    return False
+
 def get_user_status(db,userid):
     cur = db.cursor()
     cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
@@ -78,7 +85,8 @@ startmessage1 = 'Для начала введи свои фамилию, имя 
 startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
 startmessage3 = 'И последний шаг: назови своё направление и курс, например: "Программная Инженерия, 1 курс"'
 startmessage4 = 'Регистрация завершена!'
-mainbutton0 = 'Найти команду'
+mainbutton0_1 = 'Найти команду'
+mainbutton0_2 = 'Покинуть команду'
 mainbutton1 = 'Организовать свою команду'
 mainbutton2 = 'Доступные мероприятия'
 mainbutton3 = 'Обновить информацию о себе'
@@ -95,29 +103,52 @@ def get_button(label, color, payload=""):
         'color': color
     }
 
-keyboard = {
+keyboard_main1 = {
     'one_time': False,
     'buttons':
     [
-        [get_button(label=mainbutton0, color='positive')],
+        [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
         [get_button(label=mainbutton2, color='positive')],
         [get_button(label=mainbutton3, color='primary')]
     ]
 }
-keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
-keyboard = str(keyboard.decode('utf-8'))
+keyboard_main2 = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label=mainbutton0_2, color='negative')],
+        [get_button(label=mainbutton1, color='positive')],
+        [get_button(label=mainbutton2, color='positive')],
+        [get_button(label=mainbutton3, color='primary')]
+    ]
+}
+back_key = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label='Вернуться обратно', color='primary')]
+    ]
+}
+keyboard_main1 = json.dumps(keyboard_main1, ensure_ascii=False).encode('utf-8')
+keyboard_main1 = str(keyboard_main1.decode('utf-8'))
 
 while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
         id = messages['items'][0]['last_message']['from_id']
         body = messages['items'][0]['last_message']['text']
-
+        
+        if id_is_not_exist(db, id):
+            cur = db.cursor()
+            cur.execute('INSERT INTO urfuevents_users SET id = '+str(id)+', fio = "", studygroup = "", speciality = "", team = "", status = ""')
+            cur.close()
+ 	
         user_info = get_user_info(db, id)
         user_status = get_user_status(db, id)
         user_team = get_user_team(db, id)
-        
+	 
+ 
         # Регистрация
         if user_status == '':
             vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
@@ -134,11 +165,11 @@ while True:
         if user_status == 'register3':
             change_user_info(db, id, 'speciality', body)
             change_user_status(db, id, 'mainpage')
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard_main1, 'random_id':''})
          
         # Главное меню
         if user_status == 'mainpage':               
-            if body.lower() == mainbutton0.lower():
+            if body.lower() == mainbutton0_1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'random_id':''})            
             elif body.lower() == mainbutton1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
