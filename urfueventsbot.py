@@ -197,6 +197,6 @@ while True:
                 reset_info(db,id)
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
             else:
-                 vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})
+                 vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': keyboard, 'random_id':''}) 
 
     time.sleep(1)
