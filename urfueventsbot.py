@@ -12,6 +12,12 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 
+def update_slot(db, userid, column)
+
+def delete_slot(db, userid, column)
+    cur = db.cursor()
+    cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
+
 def get_user_status(db,userid):
     cur = db.cursor()
     cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
@@ -20,12 +26,11 @@ def get_user_status(db,userid):
 
 def get_user_info(db, userid):  
     cur = db.cursor()
-    cur.execute('SELECT fio FROM urfuevents_users WHERE id='+str(userid))
-    userfio = cur.fetchall()
-    cur.execute('SELECT studygroup FROM urfuevents_users WHERE id='+str(userid))
-    usergroup = cur.fetchall()
-    cur.execute('SELECT speciality FROM urfuevents_users WHERE id='+str(userid))
-    userspeciality = cur.fetchall()
+    cur.execute('SELECT * FROM urfuevents_users WHERE id='+str(userid))
+    userdata = cur.fetchall()[0]
+    userfio = userdata[1]
+    usergroup = userdata[2]
+    userspeciality =userdata[3]
     userinfo = [userfio, usergroup, userspeciality]
     return userinfo
 
@@ -39,23 +44,25 @@ def get_teams(db):
     cur = db.cursor()
     cur.execute('SELECT * FROM urfuevents_teams WHERE 1')
     teams = cur.fetchall()
-    teamlist = 'Чтобы присоединиться к команде, отправь её номер в ответ!\n'
+    teamlist = 'Чтобы присоединиться к команде, отправь её номер в ответ!\n\n'
     for team in teams:
-        teamlist += team
-        teamlist += '\n'
+    	teamlist += '\n\n' + str(team[0]) + '. ' + team[1] + ' [' + str(team[5]) + '/' + str(team[6]) + '] \n' 
+    	teamlist += 'Мероприятие: ' + team[2] + '\n'
+    	leaderinfo = get_user_info(db, team[4])
+    	teamlist += 'Капитан: ' + leaderinfo[0] + ' (' + leaderinfo[1] + '; ' + leaderinfo[2] + ') vk.com/id' + team[4] + '\n'
+    	teamlist += 'Требования к участникам: ' + team[3]
     return teamlist
 
 def get_events(db):
     cur = db.cursor()
     cur.execute('SELECT * FROM urfuevents_events WHERE 1')
     events = cur.fetchall()
-    eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n'
+    eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n\n'
     for event in events:
-        eventlist += event
-        eventlist += '\n'
+        eventlist += str(event[0]) + '. ' + event[1] + ' — ' + event[2] + '\n'
     return eventlist
 
-def reset_info(db, id):
+def reset_info(db, userid):
     cur = db.cursor()
 
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
