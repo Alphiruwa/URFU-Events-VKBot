@@ -13,16 +13,10 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 db.autocommit(True)
 
-def update_slot(db, userid, column)
-
-def delete_slot(db, userid, column)
-    cur = db.cursor()
-    cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
-
 def get_user_status(db,userid):
     cur = db.cursor()
     cur.execute('SELECT status FROM urfuevents_users WHERE id='+str(userid))
-    userstatus = cur.fetchall()
+    userstatus = cur.fetchall()[0][0]
     return userstatus
 
 def get_user_info(db, userid):  
@@ -38,7 +32,7 @@ def get_user_info(db, userid):
 def get_user_team(db, userid):
     cur = db.cursor()
     cur.execute('SELECT team FROM urfuevents_users WHERE id='+str(userid))
-    userteam = cur.fetchall()
+    userteam = cur.fetchall()[0][0]
     return userteam
 
 def get_teams(db):
@@ -63,8 +57,21 @@ def get_events(db):
         eventlist += str(event[0]) + '. ' + event[1] + ' — ' + event[2] + '\n'
     return eventlist
 
+def change_user_status(db, userid, value):
+    cur = db.cursor()
+    cur.execute('UPDATE urfuevents_users SET status = "'+value+'" WHERE id='+str(userid))
+    
+def change_user_info(db, userid, column, value):
+    cur = db.cursor()
+    cur.execute('UPDATE urfuevents_users SET '+column+' = "'+value+'" WHERE id='+str(userid))
+	
+
 def reset_info(db, userid):
     cur = db.cursor()
+    cur.execute('UPDATE urfuevents_users SET fio="" WHERE id='+str(userid))
+    cur.execute('UPDATE urfuevents_users SET studygroup="" WHERE id='+str(userid))
+    cur.execute('UPDATE urfuevents_users SET speciality="" WHERE id='+str(userid))
+    cur.execute('UPDATE urfuevents_users SET status = "register1" WHERE id='+str(userid))
 
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
@@ -76,6 +83,7 @@ mainbutton1 = 'Организовать свою команду'
 mainbutton2 = 'Доступные мероприятия'
 mainbutton3 = 'Обновить информацию о себе'
 unknownmessage = 'Я плохо понимаю человеческий, давай действовать по инструкции!'
+resetmessage = 'Твои данные были успешно сброшены! Теперь давай заполним их заново!'
     
 def get_button(label, color, payload=""):
     return {
@@ -110,18 +118,26 @@ while True:
         user_status = get_user_status(db, id)
         user_team = get_user_team(db, id)
         
+        # Регистрация
         if user_status == '':
-            if user_info[0] == '':
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
-            if user_info[1] == '' and user_info[0] != '':
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})
-            if user_info[2] == '' and user_info[1] != '' and user_info[0] != '':
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
-            if user_info[0] != '' and user_info[1] != '' and user_info[2] != '':
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
-            
-        if user_status != '':               
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
+            change_user_status(db, id, 'register1')
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
+        if user_status == 'register1':
+            change_user_info(db, id, 'fio', body)
+            change_user_status(db, id, 'register2')
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})  
+        if user_status == 'register2':
+            change_user_info(db, id, 'studygroup', body)
+            change_user_status(db, id, 'register3')
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
+        if user_status == 'register3':
+            change_user_info(db, id, 'speciality', body)
+            change_user_status(db, id, 'mainpage')
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
+         
+        # Главное меню
+        if user_status == 'mainpage':               
             if body.lower() == mainbutton0.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'random_id':''})            
             elif body.lower() == mainbutton1.lower():
@@ -129,7 +145,9 @@ while True:
             elif body.lower() == mainbutton2.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_events(db), 'random_id':''})              
             elif body.lower() == mainbutton3.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':'*снова заполнение данных со старта*', 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':resetmessage, 'random_id':''})
+                reset_info(db,id)
+                vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
             else:
                  vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})
 
