@@ -13,6 +13,7 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 db.autocommit(True)
 
+# Все вспомогательные функции, которые используются в боте
 def id_is_not_exist(db, userid):
     cur = db.cursor()
     cur.execute('SELECT * FROM urfuevents_users WHERE id='+str(userid))
@@ -59,7 +60,7 @@ def get_events(db):
     cur = db.cursor()
     cur.execute('SELECT * FROM urfuevents_events WHERE 1')
     events = cur.fetchall()
-    eventlist = 'Чтобы добавить в этот список своё мероприятие, свяжись с администрацией!\n\n'
+    eventlist = '(Чтобы добавить в этот список своё мероприятие, свяжись с администрацией)\n\n'
     for event in events:
         eventlist += str(event[0]) + '. ' + event[1] + ' — ' + event[2] + '\n'
     return eventlist
@@ -80,19 +81,23 @@ def reset_info(db, userid):
     cur.execute('UPDATE urfuevents_users SET speciality="" WHERE id='+str(userid))
     cur.execute('UPDATE urfuevents_users SET status = "register1" WHERE id='+str(userid))
 
+# Стандартные сообщения, чтобы потом не вводить их вручную 
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
 startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
 startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
 startmessage3 = 'И последний шаг: назови своё направление и курс, например: "Программная Инженерия, 1 курс"'
 startmessage4 = 'Регистрация завершена!'
+mainbutton0 = 'Информация о себе'
 mainbutton0_1 = 'Найти команду'
 mainbutton0_2 = 'Покинуть команду'
 mainbutton1 = 'Организовать свою команду'
 mainbutton2 = 'Доступные мероприятия'
 mainbutton3 = 'Обновить информацию о себе'
+backbutton = 'Вернуться назад'
 unknownmessage = 'Я плохо понимаю человеческий, давай действовать по инструкции!'
 resetmessage = 'Твои данные были успешно сброшены! Теперь давай заполним их заново!'
-    
+  
+# Клавиатура пользователя  
 def get_button(label, color, payload=""):
     return {
         'action': {
@@ -102,11 +107,11 @@ def get_button(label, color, payload=""):
         },
         'color': color
     }
-
 keyboard_main1 = {
-    'one_time': False,
+    'one_time': True,
     'buttons':
     [
+        [get_button(label=mainbutton0, color='primary')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
         [get_button(label=mainbutton2, color='positive')],
@@ -117,7 +122,9 @@ keyboard_main2 = {
     'one_time': True,
     'buttons':
     [
+        [get_button(label=mainbutton0, color='primary')],
         [get_button(label=mainbutton0_2, color='negative')],
+        [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
         [get_button(label=mainbutton2, color='positive')],
         [get_button(label=mainbutton3, color='primary')]
@@ -127,12 +134,17 @@ back_key = {
     'one_time': True,
     'buttons':
     [
-        [get_button(label='Вернуться обратно', color='primary')]
+        [get_button(label=backbutton, color='primary')]
     ]
 }
 keyboard_main1 = json.dumps(keyboard_main1, ensure_ascii=False).encode('utf-8')
 keyboard_main1 = str(keyboard_main1.decode('utf-8'))
+keyboard_main2 = json.dumps(keyboard_main2, ensure_ascii=False).encode('utf-8')
+keyboard_main2 = str(keyboard_main2.decode('utf-8'))
+back_key = json.dumps(back_key, ensure_ascii=False).encode('utf-8')
+back_key = str(back_key.decode('utf-8'))
 
+# Само тело бота
 while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
@@ -147,7 +159,8 @@ while True:
         user_info = get_user_info(db, id)
         user_status = get_user_status(db, id)
         user_team = get_user_team(db, id)
-	 
+        if user_team == '': keyboard = keyboard_main1
+        else: keyboard = keyboard_main2	 
  
         # Регистрация
         if user_status == '':
@@ -165,16 +178,20 @@ while True:
         if user_status == 'register3':
             change_user_info(db, id, 'speciality', body)
             change_user_status(db, id, 'mainpage')
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard_main1, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
          
         # Главное меню
-        if user_status == 'mainpage':               
+        if user_status == 'mainpage':                   
             if body.lower() == mainbutton0_1.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'random_id':''})            
+                vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'keyboard': back_key, 'random_id':''})    
+            elif body.lower() == mainbutton0_2.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'keyboard': back_key, 'random_id':''})
+            elif body.lower() == backbutton.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})
             elif body.lower() == mainbutton1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'*заполнение информации о команде т.е. выбор мероприятия и требования к участникам*', 'random_id':''}) 
             elif body.lower() == mainbutton2.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':get_events(db), 'random_id':''})              
+                vk.method('messages.send', {'peer_id':id, 'message':get_events(db), 'keyboard': back_key, 'random_id':''})             
             elif body.lower() == mainbutton3.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':resetmessage, 'random_id':''})
                 reset_info(db,id)
