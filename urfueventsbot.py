@@ -11,6 +11,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f31221f4f58eef5ec0c6b6838a01e93', api_version=5.95)
 
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
+db.autocommit(True)
 
 def update_slot(db, userid, column)
 
