@@ -96,9 +96,10 @@ def change_user_info(db, userid, column, value):
 	
 def update_members_count(db, team):
     cur = db.cursor()
-    cur.execute('SELECT * FROM urfuevents_teams WHERE name ="'+team+'"')
+    cur.execute('SELECT * FROM urfuevents_users WHERE team ="'+team+'"')
     team_members = cur.fetchall()
-    count = len(team_members)
+    if team_members == (): count = 0
+    else: count = len(team_members)
     cur.execute('UPDATE urfuevents_teams SET members = '+str(count)+' WHERE name="'+team+'"')
 
 def reset_info(db, userid):
@@ -252,8 +253,8 @@ while True:
                     cur.execute('UPDATE urfuevents_users SET team = "'+teams[int(body)][1]+'" WHERE id='+str(id))
                     cur.close()
                     vk.method('messages.send', {'peer_id':id, 'message':'Вы успешно присоединились к команде '+teams[int(body)][1]+'!\nОбязательно свяжитесь с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_main2, 'random_id':''})
+                    update_members_count(db, teams[int(body)][1])                    
                     vk.method('messages.send', {'peer_id':id, 'message':get_user_team_info(db, id), 'random_id':''})
-                    update_members_count(db, teams[int(body)][1])
                     change_user_status(db, id, 'main_page')     
             elif body.lower() == backbutton.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})    
