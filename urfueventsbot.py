@@ -94,6 +94,12 @@ def change_user_info(db, userid, column, value):
     cur = db.cursor()
     cur.execute('UPDATE urfuevents_users SET '+column+' = "'+value+'" WHERE id='+str(userid))
 	
+def update_members_count(db, team):
+    cur = db.cursor()
+    cur.execute('SELECT * FROM urfuevents_teams WHERE name ="'+team+'"')
+    team_members = cur.fetchall()
+    count = len(team_members)
+    cur.execute('UPDATE urfuevents_teams SET members = '+str(count)+' WHERE name="'+team+'"')
 
 def reset_info(db, userid):
     cur = db.cursor()
@@ -213,8 +219,11 @@ while True:
                 vk.method('messages.send', {'peer_id':id, 'message':info, 'keyboard': keyboard, 'random_id':''}) 
             elif body.lower() == mainbutton0_2.lower():
                 cur = db.cursor()
+                team = get_user_team(db,id) 
+                cur = db.cursor()
                 cur.execute('UPDATE urfuevents_users SET team = "" WHERE id='+str(id))
-                cur.close()                
+                cur.close()   
+                update_members_count(db, team)
                 vk.method('messages.send', {'peer_id':id, 'message':'Вы успешно покинули Вашу команду!', 'keyboard': keyboard_main1, 'random_id':''})
             elif body.lower() == backbutton.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})
@@ -244,6 +253,7 @@ while True:
                     cur.close()
                     vk.method('messages.send', {'peer_id':id, 'message':'Вы успешно присоединились к команде '+teams[int(body)][1]+'!\nОбязательно свяжитесь с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_main2, 'random_id':''})
                     vk.method('messages.send', {'peer_id':id, 'message':get_user_team_info(db, id), 'random_id':''})
+                    update_members_count(db, teams[int(body)][1])
                     change_user_status(db, id, 'main_page')     
             elif body.lower() == backbutton.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})    
