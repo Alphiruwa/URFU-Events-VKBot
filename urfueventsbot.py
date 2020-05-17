@@ -56,13 +56,13 @@ def get_user_team_info(db, userid):
         team_info += '— Требования к участникам: ' + team[3] 
         cur.execute('SELECT * FROM urfuevents_users WHERE team ="'+team_name+'"')
         team_members = cur.fetchall()
-        team_info += '\n\n — Состав команды:\n\n'
+        team_info += '\n\n — Состав команды:\n'
         i = 0
         for member in team_members:
             i+=1
             team_info += str(i) +'. ' + member[1] + ' (' + member[2] + '; ' + member[3] + ') vk.com/id' + member[0] + '\n'
         return team_info
-    else: return 'Вы не состоите в команде'
+    else: return '\n\n— Вы не состоите в команде'
 
 def get_teams(db):
     cur = db.cursor()
@@ -208,8 +208,9 @@ while True:
                 change_user_status(db, id, 'team_select')
             if body.lower() == mainbutton0.lower():
                 user_info = get_user_info(db, id)
-                info = '— Ваша анкета: ' + user + info[0] + '(' + user_info[1] + ';' + user_info[2] + ')'
+                info = '— Ваша анкета: ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ')'
                 info += get_user_team_info(db,id)
+                vk.method('messages.send', {'peer_id':id, 'message':info, 'keyboard': keyboard, 'random_id':''}) 
             elif body.lower() == mainbutton0_2.lower():
                 cur = db.cursor()
                 cur.execute('UPDATE urfuevents_users SET team = "" WHERE id='+str(id))
@@ -237,7 +238,7 @@ while True:
                 cur.close()            
                 
                 if int(body) >= len(teams):
-                    vk.method('messages.send', {'peer_id':id, 'message':'Команды с выбранным номером не существует! Выберите номер из списка!', 'random_id':''})
+                    vk.method('messages.send', {'peer_id':id, 'message':'Команды с выбранным номером не существует! Выберите номер из списка!', 'keyboard': back_key, 'random_id':''})
                 else:
                     cur = db.cursor()
                     cur.execute('UPDATE urfuevents_users SET team = "'+teams[int(body)][1]+'" WHERE id='+str(id))
@@ -249,6 +250,6 @@ while True:
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})    
                 change_user_status(db, id, 'main_page')
             else:
-                vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': back_key, 'random_id':''})
 
     time.sleep(1)
