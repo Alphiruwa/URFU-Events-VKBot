@@ -206,7 +206,7 @@ while True:
             if body.lower() == mainbutton0_1.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'keyboard': back_key, 'random_id':''}) 
                 change_user_status(db, id, 'team_select')
-            if body.lower() == mainbutton0.lower():
+            elif body.lower() == mainbutton0.lower():
                 user_info = get_user_info(db, id)
                 info = '— Ваша анкета: ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ')'
                 info += get_user_team_info(db,id)
@@ -226,8 +226,7 @@ while True:
                 vk.method('messages.send', {'peer_id':id, 'message':resetmessage, 'random_id':''})
                 reset_info(db,id)
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
-            else:
-                 vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': keyboard, 'random_id':''}) 
+            else: vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': keyboard, 'random_id':''}) 
                  
         # Выбор команды
         if user_status == 'team_select':
@@ -249,7 +248,6 @@ while True:
             elif body.lower() == backbutton.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})    
                 change_user_status(db, id, 'main_page')
-            else:
-                vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': back_key, 'random_id':''})
+            else: vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': back_key, 'random_id':''})
 
     time.sleep(1)
