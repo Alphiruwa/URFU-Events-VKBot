@@ -252,7 +252,7 @@ while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
         id = messages['items'][0]['last_message']['from_id']
-        body = messages['items'][0]['last_message']['text'].replace('"', "").replace("'","")
+        body = messages['items'][0]['last_message']['text'].replace('"','').replace("'",'').replace('\\','')
         
         if id_is_not_exist(db, id):
             cur = db.cursor()
