@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+    #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import vk_api
@@ -24,6 +24,7 @@ mainbutton0_1 = 'Открыть список команд'
 mainbutton0_2 = 'Покинуть команду'
 mainbutton1 = 'Организовать свою команду'
 disband_team_button = 'Распустить команду'
+chat_button = 'Написать сообщение команде'
 # mainbutton2 = 'Доступные мероприятия'
 mainbutton3 = 'Обновить информацию о себе'
 backbutton = 'Вернуться назад'
@@ -49,6 +50,13 @@ def is_user_leader_of_team(db, userid):
     team = get_user_team_info(db, id)
     if team[3] == str(userid): return True
     return False
+    
+def send_message_to_team(db, team, message):
+    cur = db.cursor()
+    cur.execute('SELECT id FROM urfuevents_users WHERE team ="'+team+'"')
+    members = cur.fetchall()
+    for userid in members:
+        vk.method('messages.send', {'peer_id':userid[0], 'message':message, 'random_id':''}) 
     
 def disband_team(db, userid):
     team = get_user_team(db, userid)
@@ -129,27 +137,30 @@ def show_user_team_info(db, userid):
 def get_teams(db):
     cur = db.cursor()
     cur.execute('SELECT * FROM urfuevents_teams WHERE 1')
-    teams = cur.fetchall()
+    teams = cur.fetchall()   
     if teams == (): return 'В настоящий момент список команд пуст!'
-    else:
-        teamlist = 'Чтобы присоединиться к выбранной команде, отправь её название!\n\n'
-        i = 0
-        for team in teams:
-            update_members_count(db, team[0])
-            if team[4] == 0: 
-                cur = db.cursor()
-                cur.execute('DELETE FROM `urfuevents_teams` WHERE name="'+team[0]+'"') 
-                cur.close()
-            else:
-                i+=1
-                teamlist += '\n\n' + str(i) + '. ' + team[0] + ' [' + str(team[4]) + '/' + str(team[5]) + '] \n' 
-                teamlist += '— Мероприятие: ' +  team[1] + ' (' + team[6] +')' '\n'
-                leaderinfo = get_user_info(db, team[3])
-                teamlist += '— Капитан: ' + leaderinfo[0] + ' (' + leaderinfo[1] + '; ' + leaderinfo[2] + ') https://vk.com/id' + team[3] + '\n'
-                teamlist += '— Требования к участникам: ' + team[2]
-        if teamlist == 'Чтобы присоединиться к выбранной команде, отправь её название!\n\n':
-            return 'В настоящий момент список команд пуст!'
-        return teamlist
+    for team in teams:
+        update_members_count(db, team[0]) 
+    teamlist = 'Чтобы присоединиться к выбранной команде, отправь её название!\n\n'
+    cur.execute('SELECT * FROM urfuevents_teams WHERE 1')
+    teams = cur.fetchall()
+    i = 0
+    for team in teams:
+        update_members_count(db, team[0])
+        if team[4] == 0: 
+            cur = db.cursor()
+            cur.execute('DELETE FROM `urfuevents_teams` WHERE name="'+team[0]+'"') 
+            cur.close()
+        else:
+            i+=1
+            teamlist += '\n\n' + str(i) + '. ' + team[0] + ' [' + str(team[4]) + '/' + str(team[5]) + '] \n' 
+            teamlist += '— Мероприятие: ' +  team[1] + ' (' + team[6] +')' '\n'
+            leaderinfo = get_user_info(db, team[3])
+            teamlist += '— Капитан: ' + leaderinfo[0] + ' (' + leaderinfo[1] + '; ' + leaderinfo[2] + ') https://vk.com/id' + team[3] + '\n'
+            teamlist += '— Требования к участникам: ' + team[2]
+    if teamlist == 'Чтобы присоединиться к выбранной команде, отправь её название!\n\n':
+        return 'В настоящий момент список команд пуст!'
+    return teamlist
 
 #def get_events(db):
 #    cur = db.cursor()
@@ -209,6 +220,7 @@ keyboard_main2 = {
     'buttons':
     [
         [get_button(label=mainbutton0, color='primary')],
+        [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
 #       [get_button(label=mainbutton2, color='positive')],
@@ -222,6 +234,7 @@ keyboard_leader = {
     'buttons':
     [
         [get_button(label=mainbutton0, color='primary')],
+        [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
 #       [get_button(label=mainbutton2, color='positive')],
@@ -274,21 +287,21 @@ while True:
             change_user_status(db, id, 'register1')
             vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
         if user_status == 'register1':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:
                 change_user_info(db, id, 'fio', body)
                 change_user_status(db, id, 'register2')
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})  
         if user_status == 'register2':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 change_user_info(db, id, 'studygroup', body)
                 change_user_status(db, id, 'register3')
                 vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
         if user_status == 'register3':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 change_user_info(db, id, 'speciality', body)
@@ -305,17 +318,19 @@ while True:
                 info = '— Ваша анкета: ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ')'
                 info += show_user_team_info(db,id)
                 vk.method('messages.send', {'peer_id':id, 'message':info, 'keyboard': keyboard, 'random_id':''}) 
+            elif body.lower() == chat_button.lower():
+                change_user_status(db, id, 'team_chat')
+                vk.method('messages.send', {'peer_id':id, 'message':'Теперь твои сообщения будут отправляться всей команде!', 'keyboard': back_key, 'random_id':''}) 
             elif body.lower() == mainbutton0_2.lower():
                 team = get_user_team(db, id) 
                 delete_user_team(db, id)  
-                count = get_team_members_count(db, team)
-                if count[0] == 0:
-                    cur = db.cursor()
-                    cur.execute('DELETE FROM `urfuevents_teams` WHERE name="'+team+'"')
-                    cur.close()
+                user_info = get_user_info(db, id)
+                message = 'Участник покинул команду! :( \n - ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ') https://vk.com/id' + str(id)
+                send_message_to_team(db, team, message)
                 vk.method('messages.send', {'peer_id':id, 'message':'Теперь ты снова без команды!', 'keyboard': keyboard_main1, 'random_id':''})
             elif body.lower() == disband_team_button.lower():
                 if is_user_leader_of_team(db, id):
+                    send_message_to_team(db, user_team, 'Лидер вашей команды распустил состав!')
                     disband_team(db, id)
                     vk.method('messages.send', {'peer_id':id, 'message':'Команда была распущена.', 'keyboard': keyboard_main1, 'random_id':''}) 
                 else:
@@ -339,17 +354,34 @@ while True:
                 change_user_status(db, id, 'main_page')
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
             elif team_is_exist(db, body):
-                cur = db.cursor()
+                cur = db.cursor()              
                 cur.execute('UPDATE urfuevents_users SET team = "'+body+'" WHERE id='+str(id))
                 cur.close()
+                user_info = get_user_info(db, id)                
+                if user_team != '':
+                    message = 'Участник покинул команду! :( \n - ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ') https://vk.com/id' + str(id)
+                    send_message_to_team(db, user_team, message)
+                message = 'Новый участник присоединился к команде! :) \n + ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ') https://vk.com/id' + str(id)
+                send_message_to_team(db, body, message)
                 change_user_status(db, id, 'main_page')                
-                vk.method('messages.send', {'peer_id':id, 'message':'Ты успешно присоединился к команде '+body+'!\nОбязательно свяжись с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_main2, 'random_id':''})   
+                vk.method('messages.send', {'peer_id':id, 'message':'Ты успешно присоединился к команде '+body+'!\nОбязательно свяжись с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_main2, 'random_id':''}) 
                 vk.method('messages.send', {'peer_id':id, 'message':show_user_team_info(db, id), 'random_id':''})
             else: vk.method('messages.send', {'peer_id':id, 'message':'Названной тобой команды не существует! Возможно, ты неправильно написал её название?', 'keyboard': back_key, 'random_id':''})
         
+        # Чат команды
+        if user_status == 'team_chat':
+            if body.lower() == backbutton.lower():
+                change_user_status(db, id, 'main_page')
+                vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
+            else:
+                user_info = get_user_info(db, id)
+                message = '— Чат «' + user_team + '» \n' + user_info[0] + ': ' + body
+                vk.method('messages.send', {'peer_id':id, 'message':'Твоё сообщение увидят все участники команды!', 'keyboard':back_key, 'random_id':''})
+                send_message_to_team(db, user_team, message)
+        
         # Создание команды
         if user_status == 'team_creating_1':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 if body.lower() == backbutton.lower():
@@ -365,7 +397,7 @@ while True:
                     change_user_status(db,id,'team_creating_2') 
                     vk.method('messages.send', {'peer_id':id, 'message':'Теперь напиши, на какое мероприятие ты хочешь собрать команду!', 'keyboard': back_key, 'random_id':''})                 
         if user_status == 'team_creating_2':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 if body.lower() == backbutton.lower():
@@ -394,7 +426,7 @@ while True:
                 change_user_status(db, id, 'main_page')
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
             else:
-                if body.isdigit:
+                if body.isdigit():
                     body = str(abs(int(body)))
                     team = get_user_team(db,id)
                     cur = db.cursor()
@@ -405,7 +437,7 @@ while True:
                 else: 
                     vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести число!', 'keyboard': back_key, 'random_id':''}) 
         if user_status == 'team_creating_5':
-            if body == '': 
+            if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 if body.lower() == backbutton.lower():
