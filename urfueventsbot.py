@@ -1,4 +1,4 @@
-    #! /usr/bin/env python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import vk_api
@@ -12,6 +12,9 @@ vk = vk_api.VkApi(token='199645f330de1d079a2c0602dac55163c593fd9106d4873265c3b5f
 
 db = pymysql.connect('localhost', 'unodoscuattro', 'unodoscuattro', 'urfuevents')
 db.autocommit(True)
+# db: urfuevents_users, urfuevents_teams
+# urfuevents_users: id | fio | studygroup | speciality | team | status
+# urfuevents_teams: name | event | requierements | captain_id | members | total | event_date
 
 # Стандартные сообщения, чтобы потом не вводить их вручную 
 startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
@@ -162,15 +165,6 @@ def get_teams(db):
         return 'В настоящий момент список команд пуст!'
     return teamlist
 
-#def get_events(db):
-#    cur = db.cursor()
-#    cur.execute('SELECT * FROM urfuevents_events WHERE 1')
-#    events = cur.fetchall()
-#    eventlist = '(Чтобы добавить в этот список своё мероприятие, свяжись с администрацией)\n\n'
-#    for event in events:
-#        eventlist += str(event[0]) + '. ' + event[1] + ' — ' + event[2] + '\n'
-#    return eventlist
-
 def change_user_status(db, userid, value):
     cur = db.cursor()
     cur.execute('UPDATE urfuevents_users SET status = "'+value+'" WHERE id='+str(userid))
@@ -211,7 +205,6 @@ keyboard_main1 = {
         [get_button(label=mainbutton0, color='primary')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
-#       [get_button(label=mainbutton2, color='positive')],
         [get_button(label=mainbutton3, color='primary')]
     ]
 }
@@ -223,7 +216,6 @@ keyboard_main2 = {
         [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
-#       [get_button(label=mainbutton2, color='positive')],
         [get_button(label=mainbutton0_2, color='negative')],
         [get_button(label=mainbutton3, color='primary')]
     ]
@@ -237,7 +229,6 @@ keyboard_leader = {
         [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
-#       [get_button(label=mainbutton2, color='positive')],
         [get_button(label=mainbutton0_2, color='negative')],
         [get_button(label=disband_team_button, color='negative')],
         [get_button(label=mainbutton3, color='primary')]
@@ -260,7 +251,7 @@ keyboard_leader = str(keyboard_leader.decode('utf-8'))
 back_key = json.dumps(back_key, ensure_ascii=False).encode('utf-8')
 back_key = str(back_key.decode('utf-8'))
 
-# Само тело бота
+# Сам бот
 while True:
     messages = vk.method('messages.getConversations', {'offset':0, 'count':20, 'filter':'unread'})
     if messages['count'] > 0:
@@ -339,9 +330,7 @@ while True:
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})
             elif body.lower() == mainbutton1.lower():
                 change_user_status(db, id, 'team_creating_1')
-                vk.method('messages.send', {'peer_id':id, 'message':'Придумай название своей команде!', 'keyboard': back_key, 'random_id':''}) 
-#           elif body.lower() == mainbutton2.lower():
-#                vk.method('messages.send', {'peer_id':id, 'message':get_events(db), 'keyboard': keyboard, 'random_id':''})             
+                vk.method('messages.send', {'peer_id':id, 'message':'Придумай название своей команде!', 'keyboard': back_key, 'random_id':''})          
             elif body.lower() == mainbutton3.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':resetmessage, 'random_id':''})
                 reset_info(db,id)
