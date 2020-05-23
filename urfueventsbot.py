@@ -220,7 +220,6 @@ keyboard_main2 = {
         [get_button(label=mainbutton0, color='primary')],
         [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
-        [get_button(label=mainbutton1, color='positive')],
         [get_button(label=mainbutton0_2, color='negative')],
         [get_button(label=mainbutton3, color='primary')]
     ]
@@ -233,7 +232,6 @@ keyboard_leader = {
         [get_button(label=mainbutton0, color='primary')],
         [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
-        [get_button(label=mainbutton1, color='positive')],
         [get_button(label=kick_user_button, color='negative')],        
         [get_button(label=mainbutton0_2, color='negative')],
         [get_button(label=disband_team_button, color='negative')],
