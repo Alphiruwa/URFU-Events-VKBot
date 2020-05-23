@@ -27,6 +27,7 @@ mainbutton0_1 = 'Открыть список команд'
 mainbutton0_2 = 'Покинуть команду'
 mainbutton1 = 'Организовать свою команду'
 disband_team_button = 'Распустить команду'
+kick_user_button = 'Исключить участника из команды'
 chat_button = 'Написать сообщение команде'
 # mainbutton2 = 'Доступные мероприятия'
 mainbutton3 = 'Обновить информацию о себе'
@@ -229,6 +230,7 @@ keyboard_leader = {
         [get_button(label=chat_button, color='positive')],
         [get_button(label=mainbutton0_1, color='positive')],
         [get_button(label=mainbutton1, color='positive')],
+        [get_button(label=kick_user_button, color='negative')],        
         [get_button(label=mainbutton0_2, color='negative')],
         [get_button(label=disband_team_button, color='negative')],
         [get_button(label=mainbutton3, color='primary')]
@@ -312,6 +314,12 @@ while True:
             elif body.lower() == chat_button.lower():
                 change_user_status(db, id, 'team_chat')
                 vk.method('messages.send', {'peer_id':id, 'message':'Теперь твои сообщения будут отправляться всей команде!', 'keyboard': back_key, 'random_id':''}) 
+            elif body.lower() == kick_user_button.lower():
+                if is_user_leader_of_team:
+                    change_user_status(db, id, 'removing_user')
+                    vk.method('messages.send', {'peer_id':id, 'message':'Введите ФИО участника, которого хотите исключить!', 'keyboard': back_key, 'random_id':''})             
+                else: 
+                    vk.method('messages.send', {'peer_id':id, 'message':'Только лидер команды может исключить её участника', 'keyboard': keyboard, 'random_id':''})
             elif body.lower() == mainbutton0_2.lower():
                 team = get_user_team(db, id) 
                 delete_user_team(db, id)  
@@ -446,6 +454,25 @@ while True:
                     cur.close()
                     change_user_status(db,id,'main_page')
                     vk.method('messages.send', {'peer_id':id, 'message':'Поздравляю, команда успешна создана! Осталось только дождаться новых участников!', 'keyboard': keyboard_leader, 'random_id':''})                     
-    
-    
+        
+        # Исключение игрока из команды
+        if user_status == 'removing_user':
+            if body.lower() == backbutton.lower():
+                change_user_status(db, id, 'main_page')
+                vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})         
+            else:
+                cur = db.cursor()
+                cur.execute('SELECT id FROM urfuevents_users WHERE fio ="'+body+'" AND team="'+user_team+'"')
+                removingid = cur.fetchall()
+                cur.close()
+                if removingid == ():
+                    vk.method('messages.send', {'peer_id':id, 'message':'В команде нет участника с такими данными!', 'keyboard': back_key, 'random_id':''}) 
+                else:
+                    removingid=removingid[0][0]
+                    delete_user_team(db, removingid)
+                    change_user_status(db, id, 'main_page')
+                    vk.method('messages.send', {'peer_id':id, 'message':'Участник был исключен из команды!', 'keyboard': keyboard, 'random_id':''}) 
+                    removing_info = get_user_info(db, removingid)
+                    message = 'Участник был исключен из команды! :( \n - ' + removing_info[0] + ' (' + removing_info[1] + '; ' + removing_info[2] + ') https://vk.com/id' + str(removingid)
+                    send_message_to_team(db, user_team, message)                    
     time.sleep(1)
