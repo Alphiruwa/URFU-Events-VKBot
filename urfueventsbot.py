@@ -24,9 +24,9 @@ startmessage3 = 'И последний шаг: назови своё напра�
 startmessage4 = 'Регистрация завершена!'
 mainbutton0 = 'Информация о себе'
 mainbutton0_1 = 'Открыть список команд'
-mainbutton0_2 = 'Покинуть команду'
+mainbutton0_2 = 'Покинуть свою команду'
 mainbutton1 = 'Организовать свою команду'
-disband_team_button = 'Распустить команду'
+disband_team_button = 'Распустить свою команду'
 kick_user_button = 'Исключить участника из команды'
 chat_button = 'Написать сообщение команде'
 # mainbutton2 = 'Доступные мероприятия'
@@ -52,15 +52,17 @@ def team_is_exist(db,team):
 
 def is_user_leader_of_team(db, userid):
     team = get_user_team_info(db, id)
+    if team == '' or team == (): return False
     if team[3] == str(userid): return True
     return False
     
 def send_message_to_team(db, team, message):
-    cur = db.cursor()
-    cur.execute('SELECT id FROM urfuevents_users WHERE team ="'+team+'"')
-    members = cur.fetchall()
-    for userid in members:
-        vk.method('messages.send', {'peer_id':userid[0], 'message':message, 'random_id':''}) 
+    if team != '':
+        cur = db.cursor()
+        cur.execute('SELECT id FROM urfuevents_users WHERE team ="'+team+'"')
+        members = cur.fetchall()
+        for userid in members:
+            vk.method('messages.send', {'peer_id':userid[0], 'message':message, 'random_id':''}) 
     
 def disband_team(db, userid):
     team = get_user_team(db, userid)
@@ -113,8 +115,10 @@ def get_user_team_info(db, userid):
     cur = db.cursor()
     team_name = get_user_team(db, userid)
     cur.execute('SELECT * FROM urfuevents_teams WHERE name ="'+team_name+'"')
-    team = cur.fetchall()[0]
-    return team
+    team = cur.fetchall()
+    if team != ():
+    	return team[0]
+    else: return ()
 
 def show_user_team_info(db, userid):
     team_name = get_user_team(db, userid)
