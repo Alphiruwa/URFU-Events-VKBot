@@ -16,24 +16,76 @@ db.autocommit(True)
 # urfuevents_users: id | fio | studygroup | speciality | team | status
 # urfuevents_teams: name | event | requierements | captain_id | members | total | event_date
 
-# Стандартные сообщения, чтобы потом не вводить их вручную 
-startmessage0 = 'Прежде чем найти команду на мероприятия, расскажи немного о себе!'
-startmessage1 = 'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!'
-startmessage2 = 'Отлично, теперь назови свою академическую группу, например: "РИ-190012"'
-startmessage3 = 'И последний шаг: назови своё направление и курс, например: "Программная Инженерия, 1 курс"'
-startmessage4 = 'Регистрация завершена!'
-mainbutton0 = 'Информация о себе'
-mainbutton0_1 = 'Открыть список команд'
-mainbutton0_2 = 'Покинуть свою команду'
-mainbutton1 = 'Организовать свою команду'
-disband_team_button = 'Распустить свою команду'
-kick_user_button = 'Исключить участника из команды'
-chat_button = 'Написать сообщение команде'
-# mainbutton2 = 'Доступные мероприятия'
-mainbutton3 = 'Обновить информацию о себе'
-backbutton = 'Вернуться назад'
-unknownmessage = 'Я плохо понимаю человеческий, давай действовать по инструкции!'
-resetmessage = 'Твои данные были успешно сброшены! Теперь давай заполним их заново!'
+# Клавиши меню 
+info_button = 'Информация о себе'
+team_list_button = 'Открыть список команд'
+team_leave_button = 'Покинуть свою команду'
+team_create_button = 'Организовать свою команду'
+team_disband_button = 'Распустить свою команду'
+team_user_kick_button = 'Исключить участника из команды'
+team_chat_button = 'Написать сообщение команде'
+user_search_button = 'Найти пользователя'
+reset_info_button = 'Обновить информацию о себе'
+back_button = 'Вернуться назад'
+
+unknown_message = 'Я плохо понимаю человеческий, давай действовать по инструкции!'
+
+# Клавиатура пользователя  
+def get_button(label, color, payload=""):
+    return {
+        'action': {
+            'type': 'text',
+            'payload': json.dumps(payload),
+            'label': label,
+        },
+        'color': color
+    }
+keyboard_without_team = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label=info_button, color='primary')],
+        [get_button(label=team_list_button, color='positive')],
+        [get_button(label=team_create_button, color='positive')],
+        [get_button(label=user_search_button, color='primary')],
+        [get_button(label=reset_info_button, color='primary')]
+    ]
+}
+keyboard_with_team = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label=info_button, color='primary')],
+        [get_button(label=team_chat_button, color='positive')],
+        [get_button(label=team_list_button, color='positive')],
+        [get_button(label=team_leave_button, color='negative')],
+        [get_button(label=user_search_button, color='primary')],        
+        [get_button(label=reset_info_button, color='primary')]
+    ]
+}
+
+keyboard_leader = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label=info_button, color='primary')],
+        [get_button(label=team_chat_button, color='positive')],
+        [get_button(label=team_list_button, color='positive')],
+        [get_button(label=team_user_kick_button, color='negative')],        
+        [get_button(label=team_leave_button, color='negative')],
+        [get_button(label=team_disband_button, color='negative')],
+        [get_button(label=user_search_button, color='primary')],        
+        [get_button(label=reset_info_button, color='primary')]
+    ]
+}
+
+back_key = {
+    'one_time': True,
+    'buttons':
+    [
+        [get_button(label=back_button, color='primary')]
+    ]
+}
 
 # Все вспомогательные функции, которые используются в боте
 def id_is_not_exist(db, userid):
@@ -120,6 +172,12 @@ def get_user_team_info(db, userid):
     	return team[0]
     else: return ()
 
+def show_user_profile(db, userid):
+    user_info = get_user_info(db,userid)
+    info = '— Анкета: ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ')'
+    info += show_user_team_info(db,userid)
+    return info
+
 def show_user_team_info(db, userid):
     team_name = get_user_team(db, userid)
     if team_name != '':
@@ -193,63 +251,11 @@ def reset_info(db, userid):
     cur.execute('UPDATE urfuevents_users SET speciality="" WHERE id='+str(userid))
     cur.execute('UPDATE urfuevents_users SET status = "register1" WHERE id='+str(userid))
   
-# Клавиатура пользователя  
-def get_button(label, color, payload=""):
-    return {
-        'action': {
-            'type': 'text',
-            'payload': json.dumps(payload),
-            'label': label,
-        },
-        'color': color
-    }
-keyboard_main1 = {
-    'one_time': True,
-    'buttons':
-    [
-        [get_button(label=mainbutton0, color='primary')],
-        [get_button(label=mainbutton0_1, color='positive')],
-        [get_button(label=mainbutton1, color='positive')],
-        [get_button(label=mainbutton3, color='primary')]
-    ]
-}
-keyboard_main2 = {
-    'one_time': True,
-    'buttons':
-    [
-        [get_button(label=mainbutton0, color='primary')],
-        [get_button(label=chat_button, color='positive')],
-        [get_button(label=mainbutton0_1, color='positive')],
-        [get_button(label=mainbutton0_2, color='negative')],
-        [get_button(label=mainbutton3, color='primary')]
-    ]
-}
-
-keyboard_leader = {
-    'one_time': True,
-    'buttons':
-    [
-        [get_button(label=mainbutton0, color='primary')],
-        [get_button(label=chat_button, color='positive')],
-        [get_button(label=mainbutton0_1, color='positive')],
-        [get_button(label=kick_user_button, color='negative')],        
-        [get_button(label=mainbutton0_2, color='negative')],
-        [get_button(label=disband_team_button, color='negative')],
-        [get_button(label=mainbutton3, color='primary')]
-    ]
-}
-
-back_key = {
-    'one_time': True,
-    'buttons':
-    [
-        [get_button(label=backbutton, color='primary')]
-    ]
-}
-keyboard_main1 = json.dumps(keyboard_main1, ensure_ascii=False).encode('utf-8')
-keyboard_main1 = str(keyboard_main1.decode('utf-8'))
-keyboard_main2 = json.dumps(keyboard_main2, ensure_ascii=False).encode('utf-8')
-keyboard_main2 = str(keyboard_main2.decode('utf-8'))
+# Настройка клавиатуры, которую требует ВК 
+keyboard_without_team = json.dumps(keyboard_without_team, ensure_ascii=False).encode('utf-8')
+keyboard_without_team = str(keyboard_without_team.decode('utf-8'))
+keyboard_with_team = json.dumps(keyboard_with_team, ensure_ascii=False).encode('utf-8')
+keyboard_with_team = str(keyboard_with_team.decode('utf-8'))
 keyboard_leader = json.dumps(keyboard_leader, ensure_ascii=False).encode('utf-8')
 keyboard_leader = str(keyboard_leader.decode('utf-8'))
 back_key = json.dumps(back_key, ensure_ascii=False).encode('utf-8')
@@ -270,86 +276,87 @@ while True:
         user_status = get_user_status(db, id)
         
         user_team = get_user_team(db, id)
-        if user_team == '': keyboard = keyboard_main1
+        if user_team == '': keyboard = keyboard_without_team
         else: 
             if is_user_leader_of_team(db, id):
                 keyboard = keyboard_leader
-            else: keyboard = keyboard_main2
+            else: keyboard = keyboard_with_team
  
         # Регистрация
         if user_status == '':
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage0, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':'Прежде чем найти команду на мероприятия, расскажи немного о себе!', 'random_id':''})
             change_user_status(db, id, 'register1')
-            vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
+            vk.method('messages.send', {'peer_id':id, 'message':'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!', 'random_id':''})
         if user_status == 'register1':
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:
                 change_user_info(db, id, 'fio', body)
                 change_user_status(db, id, 'register2')
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage2, 'random_id':''})  
+                vk.method('messages.send', {'peer_id':id, 'message':'Отлично, теперь назови свою академическую группу, например: "РИ-190012"', 'random_id':''})  
         if user_status == 'register2':
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 change_user_info(db, id, 'studygroup', body)
                 change_user_status(db, id, 'register3')
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage3, 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':'И последний шаг: назови своё направление и курс, например: "Программная Инженерия, 1 курс"', 'random_id':''})
         if user_status == 'register3':
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
                 change_user_info(db, id, 'speciality', body)
                 change_user_status(db, id, 'main_page')
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage4, 'keyboard': keyboard, 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':'Регистрация завершена!', 'keyboard': keyboard, 'random_id':''})
          
         # Главное меню
         if user_status == 'main_page':                   
-            if body.lower() == mainbutton0_1.lower():
+            if body.lower() == team_list_button.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':get_teams(db), 'keyboard': back_key, 'random_id':''}) 
                 change_user_status(db, id, 'team_select')
-            elif body.lower() == mainbutton0.lower():
-                user_info = get_user_info(db, id)
-                info = '— Ваша анкета: ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ')'
-                info += show_user_team_info(db,id)
+            elif body.lower() == info_button.lower():
+                info = show_user_profile(db,id)
                 vk.method('messages.send', {'peer_id':id, 'message':info, 'keyboard': keyboard, 'random_id':''}) 
-            elif body.lower() == chat_button.lower():
+            elif body.lower() == team_chat_button.lower():
                 change_user_status(db, id, 'team_chat')
                 vk.method('messages.send', {'peer_id':id, 'message':'Теперь твои сообщения будут отправляться всей команде!', 'keyboard': back_key, 'random_id':''}) 
-            elif body.lower() == kick_user_button.lower():
+            elif body.lower() == team_user_kick_button.lower():
                 if is_user_leader_of_team:
                     change_user_status(db, id, 'removing_user')
                     vk.method('messages.send', {'peer_id':id, 'message':'Введите ФИО участника, которого хотите исключить!', 'keyboard': back_key, 'random_id':''})             
                 else: 
                     vk.method('messages.send', {'peer_id':id, 'message':'Только лидер команды может исключить её участника', 'keyboard': keyboard, 'random_id':''})
-            elif body.lower() == mainbutton0_2.lower():
+            elif body.lower() == team_leave_button.lower():
                 team = get_user_team(db, id) 
                 delete_user_team(db, id)  
                 user_info = get_user_info(db, id)
                 message = 'Участник покинул команду! :( \n - ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ') https://vk.com/id' + str(id)
                 send_message_to_team(db, team, message)
-                vk.method('messages.send', {'peer_id':id, 'message':'Теперь ты снова без команды!', 'keyboard': keyboard_main1, 'random_id':''})
-            elif body.lower() == disband_team_button.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'Теперь ты снова без команды!', 'keyboard': keyboard_without_team, 'random_id':''})
+            elif body.lower() == team_disband_button.lower():
                 if is_user_leader_of_team(db, id):
                     send_message_to_team(db, user_team, 'Лидер вашей команды распустил состав!')
                     disband_team(db, id)
-                    vk.method('messages.send', {'peer_id':id, 'message':'Команда была распущена.', 'keyboard': keyboard_main1, 'random_id':''}) 
+                    vk.method('messages.send', {'peer_id':id, 'message':'Команда была распущена.', 'keyboard': keyboard_without_team, 'random_id':''}) 
                 else:
                     vk.method('messages.send', {'peer_id':id, 'message':'Только лидер команды может распустить её!', 'keyboard': keyboard, 'random_id':''}) 
-            elif body.lower() == backbutton.lower():
+            elif body.lower() == back_button.lower():
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})
-            elif body.lower() == mainbutton1.lower():
+            elif body.lower() == team_create_button.lower():
                 change_user_status(db, id, 'team_creating_1')
-                vk.method('messages.send', {'peer_id':id, 'message':'Придумай название своей команде!', 'keyboard': back_key, 'random_id':''})          
-            elif body.lower() == mainbutton3.lower():
-                vk.method('messages.send', {'peer_id':id, 'message':resetmessage, 'random_id':''})
+                vk.method('messages.send', {'peer_id':id, 'message':'Придумай название своей команде!', 'keyboard': back_key, 'random_id':''})  
+            elif body.lower() == user_search_button.lower():
+                change_user_status(db, id, 'user_search')
+                vk.method('messages.send', {'peer_id':id, 'message':'Введи ФИО пользователя, которого хочешь найти!', 'keyboard': back_key, 'random_id':''})                 
+            elif body.lower() == reset_info_button.lower():
+                vk.method('messages.send', {'peer_id':id, 'message':'Твои данные были успешно сброшены! Теперь давай заполним их заново!', 'random_id':''})
                 reset_info(db,id)
-                vk.method('messages.send', {'peer_id':id, 'message':startmessage1, 'random_id':''})
-            else: vk.method('messages.send', {'peer_id':id, 'message':unknownmessage, 'keyboard': keyboard, 'random_id':''}) 
+                vk.method('messages.send', {'peer_id':id, 'message':'Для начала введи свои фамилию, имя и отчество! Эти данные нужны для того, чтобы капитан команды мог записать тебя на мероприятие!', 'random_id':''})
+            else: vk.method('messages.send', {'peer_id':id, 'message':unknown_message, 'keyboard': keyboard, 'random_id':''}) 
                  
         # Выбор команды
         if user_status == 'team_select':
-            if body.lower() == backbutton.lower():
+            if body.lower() == back_button.lower():
                 change_user_status(db, id, 'main_page')
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
             elif team_is_exist(db, body):
@@ -363,13 +370,13 @@ while True:
                 message = 'Новый участник присоединился к команде! :) \n + ' + user_info[0] + ' (' + user_info[1] + '; ' + user_info[2] + ') https://vk.com/id' + str(id)
                 send_message_to_team(db, body, message)
                 change_user_status(db, id, 'main_page')                
-                vk.method('messages.send', {'peer_id':id, 'message':'Ты успешно присоединился к команде '+body+'!\nОбязательно свяжись с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_main2, 'random_id':''}) 
+                vk.method('messages.send', {'peer_id':id, 'message':'Ты успешно присоединился к команде '+body+'!\nОбязательно свяжись с участниками команды для уточнения всех подробностей!', 'keyboard': keyboard_with_team, 'random_id':''}) 
                 vk.method('messages.send', {'peer_id':id, 'message':show_user_team_info(db, id), 'random_id':''})
             else: vk.method('messages.send', {'peer_id':id, 'message':'Названной тобой команды не существует! Возможно, ты неправильно написал её название?', 'keyboard': back_key, 'random_id':''})
         
         # Чат команды
         if user_status == 'team_chat':
-            if body.lower() == backbutton.lower():
+            if body.lower() == back_button.lower():
                 change_user_status(db, id, 'main_page')
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
             else:
@@ -383,7 +390,7 @@ while True:
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
-                if body.lower() == backbutton.lower():
+                if body.lower() == back_button.lower():
                     change_user_status(db, id, 'main_page')
                     vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})         
                 elif team_is_exist(db, body):
@@ -399,7 +406,7 @@ while True:
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
-                if body.lower() == backbutton.lower():
+                if body.lower() == back_button.lower():
                     change_user_status(db, id, 'main_page')
                     disband_team(db, id)
                     vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
@@ -414,7 +421,7 @@ while True:
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:                
-                if body.lower() == backbutton.lower():
+                if body.lower() == back_button.lower():
                     change_user_status(db, id, 'main_page')
                     disband_team(db, id)
                     vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
@@ -426,7 +433,7 @@ while True:
                     change_user_status(db,id,'team_creating_4')
                     vk.method('messages.send', {'peer_id':id, 'message':'Сколько максимально участников должно быть в команде?', 'keyboard': back_key, 'random_id':''}) 
         if user_status == 'team_creating_4':
-            if body.lower() == backbutton.lower():
+            if body.lower() == back_button.lower():
                 change_user_status(db, id, 'main_page')
                 disband_team(db, id)
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
@@ -445,7 +452,7 @@ while True:
             if body.replace(' ','') == '': 
                 vk.method('messages.send', {'peer_id':id, 'message':'Ты должен ввести хоть что-нибудь! :(', 'random_id':''})  
             else:        
-                if body.lower() == backbutton.lower():
+                if body.lower() == back_button.lower():
                     change_user_status(db, id, 'main_page')
                     disband_team(db, id)
                     vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''}) 
@@ -457,9 +464,9 @@ while True:
                     change_user_status(db,id,'main_page')
                     vk.method('messages.send', {'peer_id':id, 'message':'Поздравляю, команда успешна создана! Осталось только дождаться новых участников!', 'keyboard': keyboard_leader, 'random_id':''})                     
         
-        # Исключение игрока из команды
+        # Исключение участника из команды
         if user_status == 'removing_user':
-            if body.lower() == backbutton.lower():
+            if body.lower() == back_button.lower():
                 change_user_status(db, id, 'main_page')
                 vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})         
             else:
@@ -476,5 +483,23 @@ while True:
                     vk.method('messages.send', {'peer_id':id, 'message':'Участник был исключен из команды!', 'keyboard': keyboard, 'random_id':''}) 
                     removing_info = get_user_info(db, removingid)
                     message = 'Участник был исключен из команды! :( \n - ' + removing_info[0] + ' (' + removing_info[1] + '; ' + removing_info[2] + ') https://vk.com/id' + str(removingid)
-                    send_message_to_team(db, user_team, message)                    
+                    send_message_to_team(db, user_team, message)        
+        
+        # Поиск участника
+        if user_status == 'user_search':
+            if body.lower() == back_button.lower():
+                change_user_status(db, id, 'main_page')
+                vk.method('messages.send', {'peer_id':id, 'message':'Возвращаемся...', 'keyboard': keyboard, 'random_id':''})         
+            else:
+                cur = db.cursor()
+                cur.execute('SELECT id FROM urfuevents_users WHERE fio ="'+body+'"')
+                search_ids = cur.fetchall()
+                cur.close()
+                if search_ids == ():
+                    vk.method('messages.send', {'peer_id':id, 'message':'К сожалению, такого пользователя не существует! Попробуем по-другому?', 'keyboard': back_key, 'random_id':''})
+                else:
+                    search_results = 'Вот, что мне удалось найти: \n\n'
+                    for search_id in search_ids[0]:
+                        search_results+='\n\n'+show_user_profile(db,search_id)
+                    vk.method('messages.send', {'peer_id':id, 'message':search_results, 'keyboard':back_key, 'random_id':''})    
     time.sleep(1)
