@@ -198,7 +198,7 @@ def show_user_team_info(db, userid):
             i+=1
             team_info += str(i) +'. ' + member[1] + ' (' + member[2] + '; ' + member[3] + ') https://vk.com/id' + member[0] + '\n'
         return team_info
-    else: return '\n\n— Вы не состоите в команде'
+    else: return '\n\n— Команды не найдено'
 
 def get_teams(db):
     cur = db.cursor()
